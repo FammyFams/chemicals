@@ -1,0 +1,147 @@
+---
+import Layout from '../layouts/Layout.astro';
+import InputPanel from '../components/InputPanel.astro';
+import ResultsContainer from '../components/ResultsContainer.astro';
+---
+
+<Layout>
+  <InputPanel />
+  <ResultsContainer />
+</Layout>
+
+<script>
+  import { extractLines } from '../lib/pdf';
+  import { parseSds } from '../lib/sds';
+  import type { Ingredient } from '../lib/types';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  const urlInput = $<HTMLInputElement>('pdf-url');
+  const loadUrlBtn = $<HTMLButtonElement>('load-url');
+  const fileInput = $<HTMLInputElement>('file-input');
+  const dropzone = $<HTMLDivElement>('dropzone');
+  const statusEl = $<HTMLDivElement>('status');
+  const results = $<HTMLElement>('results');
+  const rows = $<HTMLTableSectionElement>('rows');
+  const bar = $<HTMLDivElement>('bar');
+  const legend = $<HTMLDivElement>('legend');
+
+  const PALETTE = ['#4cc9f0', '#f72585', '#52d273', '#ffb703', '#9b5de5', '#00bbf9', '#fb8500', '#90be6d', '#e07a5f', '#7678ed'];
+
+  function setStatus(msg: string, kind: 'info' | 'err' = 'info') {
+    statusEl.textContent = msg;
+    statusEl.className = `status ${kind}`;
+    statusEl.classList.toggle('hidden', !msg);
+  }
+
+  function rangeText(i: Ingredient): string {
+    if (i.isProprietary) return 'Proprietary';
+    if (i.min === null || i.max === null) return i.concentrationRaw || 'Not stated';
+    if (i.min === i.max) return `${i.min}%`;
+    return `${i.min}–${i.max}%`;
+  }
+
+  function render(ingredients: Ingredient[]) {
+    rows.innerHTML = '';
+    bar.innerHTML = '';
+    legend.innerHTML = '';
+
+    ingredients.forEach((ing, idx) => {
+      const color = PALETTE[idx % PALETTE.length];
+
+      const tr = document.createElement('tr');
+      const propTag = ing.isProprietary ? '<span class="tag">proprietary</span>' : '';
+      tr.innerHTML =
+        `<td><span class="dot" style="background:${color}"></span>${escapeHtml(ing.name)}${propTag}</td>` +
+        `<td class="cas">${escapeHtml(ing.cas || '—')}</td>` +
+        `<td>${escapeHtml(rangeText(ing))}</td>` +
+        `<td class="num">${ing.estimatedPct}%</td>`;
+      rows.appendChild(tr);
+
+      if (ing.estimatedPct > 0) {
+        const seg = document.createElement('div');
+        seg.className = 'seg';
+        seg.style.width = `${ing.estimatedPct}%`;
+        seg.style.background = color;
+        seg.title = `${ing.name}: ${ing.estimatedPct}%`;
+        bar.appendChild(seg);
+      }
+
+      const item = document.createElement('span');
+      item.innerHTML = `<span class="dot" style="background:${color}"></span>${escapeHtml(ing.name)} (${ing.estimatedPct}%)`;
+      legend.appendChild(item);
+    });
+
+    results.classList.remove('hidden');
+  }
+
+  function escapeHtml(s: string): string {
+    return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+  }
+
+  async function analyze(data: ArrayBuffer, label: string) {
+    try {
+      setStatus(`Reading ${label}…`);
+      const lines = await extractLines(data);
+      const comp = parseSds(lines);
+      if (!comp.found) {
+        setStatus('Could not locate Section 3 (Composition) in this PDF. Is it a standard SDS?', 'err');
+        results.classList.add('hidden');
+        return;
+      }
+      if (comp.ingredients.length === 0) {
+        setStatus('Section 3 was found but no ingredients/CAS numbers could be parsed.', 'err');
+        results.classList.add('hidden');
+        return;
+      }
+      setStatus(`Parsed ${comp.ingredients.length} ingredient(s) from Section 3.`);
+      render(comp.ingredients);
+    } catch (err) {
+      console.error(err);
+      setStatus(`Failed to read the PDF: ${(err as Error).message}`, 'err');
+    }
+  }
+
+  // File upload / drag-drop
+  dropzone.addEventListener('click', () => fileInput.click());
+  ['dragover', 'dragenter'].forEach((e) =>
+    dropzone.addEventListener(e, (ev) => { ev.preventDefault(); dropzone.classList.add('drag'); }),
+  );
+  ['dragleave', 'drop'].forEach((e) =>
+    dropzone.addEventListener(e, () => dropzone.classList.remove('drag')),
+  );
+  dropzone.addEventListener('drop', (ev) => {
+    ev.preventDefault();
+    const file = ev.dataTransfer?.files?.[0];
+    if (file) handleFile(file);
+  });
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) handleFile(file);
+  });
+
+  async function handleFile(file: File) {
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      setStatus('Please choose a PDF file.', 'err');
+      return;
+    }
+    analyze(await file.arrayBuffer(), file.name);
+  }
+
+  // URL fetch (subject to CORS in this backend-free phase)
+  loadUrlBtn.addEventListener('click', async () => {
+    const url = urlInput.value.trim();
+    if (!url) { setStatus('Paste an SDS PDF link first.', 'err'); return; }
+    try {
+      setStatus('Fetching PDF…');
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      analyze(await res.arrayBuffer(), 'linked PDF');
+    } catch {
+      setStatus(
+        "Couldn't fetch that link from the browser (likely CORS). Download the PDF and upload it instead — automatic fetching arrives in Phase 2.",
+        'err',
+      );
+    }
+  });
+</script>

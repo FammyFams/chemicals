@@ -1,0 +1,22 @@
+---
+---
+<section class="panel">
+  <div class="row">
+    <div>
+      <label for="pdf-url">SDS PDF link</label>
+      <input id="pdf-url" type="url" placeholder="https://example.com/product-sds.pdf" />
+    </div>
+    <div style="flex:0 0 auto">
+      <button id="load-url" type="button">Analyze link</button>
+    </div>
+  </div>
+
+  <p class="sep">— or —</p>
+
+  <div id="dropzone" class="dropzone">
+    <strong>Drop an SDS PDF here</strong> or click to choose a file
+    <input id="file-input" type="file" accept="application/pdf,.pdf" class="hidden" />
+  </div>
+
+  <div id="status" class="status info hidden"></div>
+</section>

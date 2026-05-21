@@ -1,0 +1,15 @@
+# build output
+dist/
+# dependencies
+node_modules/
+# generated types
+.astro/
+# environment
+.env
+.env.production
+# logs
+npm-debug.log*
+# generated / downloaded test fixtures
+scripts/*.pdf
+# macOS / editor
+.DS_Store
