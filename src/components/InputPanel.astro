@@ -1,20 +1,27 @@
 ---
 ---
 <section class="panel">
+  <p class="panel-label"><b>01</b> &nbsp;/&nbsp; Input source</p>
+
   <div class="row">
     <div>
       <label for="pdf-url">SDS PDF link</label>
       <input id="pdf-url" type="url" placeholder="https://example.com/product-sds.pdf" />
     </div>
     <div style="flex:0 0 auto">
-      <button id="load-url" type="button">Analyze link</button>
+      <button id="load-url" type="button">Analyze</button>
     </div>
   </div>
 
-  <p class="sep">— or —</p>
+  <p class="sep">— or drop a file —</p>
 
   <div id="dropzone" class="dropzone">
-    <strong>Drop an SDS PDF here</strong> or click to choose a file
+    <svg class="flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 3h6M10 3v6.5L4.6 18a2 2 0 0 0 1.7 3h11.4a2 2 0 0 0 1.7-3L14 9.5V3" />
+      <path d="M7.5 14h9" />
+    </svg>
+    <div><strong>Drop an SDS PDF here</strong> or click to choose a file</div>
+    <span class="hint">parsed locally in your browser · nothing uploaded</span>
     <input id="file-input" type="file" accept="application/pdf,.pdf" class="hidden" />
   </div>
 

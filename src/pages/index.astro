@@ -25,8 +25,9 @@ import ResultsContainer from '../components/ResultsContainer.astro';
   const rows = $<HTMLTableSectionElement>('rows');
   const bar = $<HTMLDivElement>('bar');
   const legend = $<HTMLDivElement>('legend');
+  const count = $<HTMLSpanElement>('count');
 
-  const PALETTE = ['#4cc9f0', '#f72585', '#52d273', '#ffb703', '#9b5de5', '#00bbf9', '#fb8500', '#90be6d', '#e07a5f', '#7678ed'];
+  const PALETTE = ['#c8f23a', '#ffb53d', '#56d6d0', '#ff6f91', '#a98bff', '#5aa9ff', '#7ee787', '#ff9b54', '#36c5a8', '#f178b6'];
 
   function setStatus(msg: string, kind: 'info' | 'err' = 'info') {
     statusEl.textContent = msg;
@@ -41,29 +42,47 @@ import ResultsContainer from '../components/ResultsContainer.astro';
     return `${i.min}–${i.max}%`;
   }
 
+  function setActive(idx: number, on: boolean) {
+    const seg = bar.querySelector<HTMLElement>(`.seg[data-i="${idx}"]`);
+    const tr = rows.querySelector<HTMLElement>(`tr[data-i="${idx}"]`);
+    seg?.classList.toggle('active', on);
+    tr?.classList.toggle('active', on);
+    bar.classList.toggle('dimmed', on);
+  }
+
   function render(ingredients: Ingredient[]) {
     rows.innerHTML = '';
     bar.innerHTML = '';
     legend.innerHTML = '';
+    count.textContent = `· ${ingredients.length} ingredient${ingredients.length === 1 ? '' : 's'}`;
 
     ingredients.forEach((ing, idx) => {
       const color = PALETTE[idx % PALETTE.length];
 
       const tr = document.createElement('tr');
+      tr.dataset.i = String(idx);
+      tr.style.setProperty('--i', String(idx));
       const propTag = ing.isProprietary ? '<span class="tag">proprietary</span>' : '';
       tr.innerHTML =
-        `<td><span class="dot" style="background:${color}"></span>${escapeHtml(ing.name)}${propTag}</td>` +
+        `<td><span class="chem"><span class="dot" style="background:${color}"></span>${escapeHtml(ing.name)}${propTag}</span></td>` +
         `<td class="cas">${escapeHtml(ing.cas || '—')}</td>` +
-        `<td>${escapeHtml(rangeText(ing))}</td>` +
-        `<td class="num">${ing.estimatedPct}%</td>`;
+        `<td class="range">${escapeHtml(rangeText(ing))}</td>` +
+        `<td class="num"><span class="est">${ing.estimatedPct}%` +
+        `<span class="micro" style="width:${Math.max(2, ing.estimatedPct)}%;background:${color}"></span></span></td>`;
+      tr.addEventListener('mouseenter', () => setActive(idx, true));
+      tr.addEventListener('mouseleave', () => setActive(idx, false));
       rows.appendChild(tr);
 
       if (ing.estimatedPct > 0) {
         const seg = document.createElement('div');
         seg.className = 'seg';
+        seg.dataset.i = String(idx);
         seg.style.width = `${ing.estimatedPct}%`;
         seg.style.background = color;
-        seg.title = `${ing.name}: ${ing.estimatedPct}%`;
+        seg.style.setProperty('--i', String(idx));
+        seg.title = `${ing.name} · ${ing.estimatedPct}%`;
+        seg.addEventListener('mouseenter', () => setActive(idx, true));
+        seg.addEventListener('mouseleave', () => setActive(idx, false));
         bar.appendChild(seg);
       }
 

@@ -11,5 +11,6 @@ node_modules/
 npm-debug.log*
 # generated / downloaded test fixtures
 scripts/*.pdf
+scripts/*.png
 # macOS / editor
 .DS_Store

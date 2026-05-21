@@ -2,13 +2,22 @@
 ---
 <section id="results" class="hidden">
   <div class="banner">
-    Percentages shown as <strong>Estimated %</strong> are approximations. SDS sheets disclose ranges
-    (not exact values), and trade-secret ingredients are withheld — estimates assume all components total ~100%.
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9v4M12 17h.01" />
+    </svg>
+    <div>
+      Figures marked <strong>Est.</strong> are approximations. SDS sheets disclose concentration
+      <em>ranges</em>, not exact values, and trade-secret ingredients are withheld — estimates assume
+      all components total ~100%.
+    </div>
   </div>
 
   <div class="panel">
-    <h2 style="margin-top:0;font-size:1.1rem">Composition</h2>
+    <p class="panel-label"><b>02</b> &nbsp;/&nbsp; Composition <span id="count"></span></p>
+
     <div id="bar" class="bar"></div>
+    <div class="scale"><span>0%</span><span>25</span><span>50</span><span>75</span><span>100%</span></div>
     <div id="legend" class="legend"></div>
 
     <table>
@@ -17,7 +26,7 @@
           <th>Chemical</th>
           <th>CAS&nbsp;No.</th>
           <th>Disclosed range</th>
-          <th class="num">Estimated %</th>
+          <th class="num">Est.&nbsp;%</th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>

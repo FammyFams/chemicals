@@ -13,7 +13,7 @@ const errors: string[] = [];
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 page.on('pageerror', (e) => errors.push(e.message));
 
-await page.goto('http://localhost:4321/', { waitUntil: 'networkidle' });
+await page.goto('http://localhost:4321/chemicals/', { waitUntil: 'networkidle' });
 
 await page.setInputFiles('#file-input', samplePdf);
 await page.waitForSelector('#results:not(.hidden)', { timeout: 15000 });
