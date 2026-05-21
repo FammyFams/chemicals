@@ -95,7 +95,15 @@ export function parseSds(lines: string[]): Composition {
         !SECTION3_START.test(line) &&
         !HEADER_RE.test(line)
       ) {
-        let name = cleanName(line.replace(/proprietary|trade\s*secret|confidential|withheld|not\s*disclosed/gi, ''));
+        // Strip the proprietary marker first so a disclosed bound like
+        // "(Proprietary) < 7%" is read as the concentration, not "Proprietary".
+        const stripped = line.replace(
+          /proprietary|trade\s*secret|confidential|withheld|not\s*disclosed/gi,
+          '',
+        );
+        const conc = stripped.match(CONC_RE);
+        const { min, max } = conc ? parseConcentration(conc[0]) : { min: null, max: null };
+        let name = cleanName(conc ? stripped.replace(conc[0], '') : stripped);
         if (!looksLikeChemicalName(name)) continue;
         // Collapse "the remainder of the formulation is …" sentences.
         if (BALANCE_RE.test(line) || name.split(/\s+/).length > 5) {
@@ -104,9 +112,9 @@ export function parseSds(lines: string[]): Composition {
         ingredients.push({
           name,
           cas: '',
-          concentrationRaw: 'Proprietary',
-          min: null,
-          max: null,
+          concentrationRaw: conc ? conc[0].trim() : 'Proprietary',
+          min,
+          max,
           isProprietary: true,
           estimatedPct: 0,
         });
