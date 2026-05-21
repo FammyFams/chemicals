@@ -12,5 +12,7 @@ npm-debug.log*
 # generated / downloaded test fixtures
 scripts/*.pdf
 scripts/*.png
+# locally collected source SDS PDFs (dataset is built from these into src/data)
+scripts/pdfs/
 # macOS / editor
 .DS_Store

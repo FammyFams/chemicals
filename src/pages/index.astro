@@ -13,7 +13,14 @@ import ResultsContainer from '../components/ResultsContainer.astro';
   import { extractLines } from '../lib/pdf';
   import { parseSds } from '../lib/sds';
   import { resolveToPdf } from '../lib/source';
+  import productsRaw from '../data/products.json';
   import type { Ingredient } from '../lib/types';
+
+  interface Product {
+    name: string; slug: string; brand?: string; aliases?: string[];
+    sourceUrl?: string; found: boolean; ingredients: Ingredient[];
+  }
+  const products = productsRaw as Product[];
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -27,6 +34,8 @@ import ResultsContainer from '../components/ResultsContainer.astro';
   const bar = $<HTMLDivElement>('bar');
   const legend = $<HTMLDivElement>('legend');
   const count = $<HTMLSpanElement>('count');
+  const searchInput = $<HTMLInputElement>('product-search');
+  const searchResults = $<HTMLUListElement>('search-results');
 
   const PALETTE = ['#c8f23a', '#ffb53d', '#56d6d0', '#ff6f91', '#a98bff', '#5aa9ff', '#7ee787', '#ff9b54', '#36c5a8', '#f178b6'];
 
@@ -98,6 +107,60 @@ import ResultsContainer from '../components/ResultsContainer.astro';
   function escapeHtml(s: string): string {
     return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
   }
+
+  // ----- product catalog search (baked-in dataset) -----
+  function searchProducts(q: string): Product[] {
+    const t = q.trim().toLowerCase();
+    if (!t) return [];
+    const tokens = t.split(/\s+/);
+    return products
+      .filter((p) => {
+        const hay = [p.name, p.brand ?? '', ...(p.aliases ?? []), ...p.ingredients.map((i) => i.name)]
+          .join(' ')
+          .toLowerCase();
+        return tokens.every((tok) => hay.includes(tok));
+      })
+      .slice(0, 8);
+  }
+
+  function renderResults(list: Product[]) {
+    searchResults.innerHTML = '';
+    if (list.length === 0) { searchResults.classList.add('hidden'); return; }
+    list.forEach((p) => {
+      const li = document.createElement('li');
+      const top = p.ingredients[0];
+      li.innerHTML =
+        `<span class="r-name">${escapeHtml(p.name)}</span>` +
+        `<span class="r-meta">${p.ingredients.length} ingredients` +
+        `${top ? ` · ${escapeHtml(top.name)} ${top.estimatedPct}%` : ''}</span>`;
+      li.addEventListener('click', () => selectProduct(p));
+      searchResults.appendChild(li);
+    });
+    searchResults.classList.remove('hidden');
+  }
+
+  function selectProduct(p: Product) {
+    searchInput.value = p.name;
+    searchResults.classList.add('hidden');
+    setStatus(`${p.name}${p.sourceUrl ? ' · from saved SDS' : ''}`);
+    render(p.ingredients);
+  }
+
+  searchInput.addEventListener('input', () => renderResults(searchProducts(searchInput.value)));
+  searchInput.addEventListener('focus', () => {
+    if (searchInput.value) renderResults(searchProducts(searchInput.value));
+  });
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const r = searchProducts(searchInput.value);
+      if (r[0]) selectProduct(r[0]);
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (!searchResults.contains(e.target as Node) && e.target !== searchInput) {
+      searchResults.classList.add('hidden');
+    }
+  });
 
   async function analyze(data: ArrayBuffer, label: string) {
     try {

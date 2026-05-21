@@ -1,0 +1,89 @@
+[
+  {
+    "name": "Repel Sportsmen Max Insect Repellent",
+    "slug": "repel-sportsmen-max-insect-repellent",
+    "found": true,
+    "ingredients": [
+      {
+        "name": "N,N Diethyl m toluamide",
+        "cas": "134-62-3",
+        "concentrationRaw": "10.00 - 30.00",
+        "min": 10,
+        "max": 30,
+        "isProprietary": false,
+        "estimatedPct": 19.8
+      },
+      {
+        "name": "Ethyl alcohol",
+        "cas": "64-17-5",
+        "concentrationRaw": "10.00 - 30.00",
+        "min": 10,
+        "max": 30,
+        "isProprietary": false,
+        "estimatedPct": 19.8
+      },
+      {
+        "name": "Butane",
+        "cas": "106-97-8",
+        "concentrationRaw": "10.00 - 30.00",
+        "min": 10,
+        "max": 30,
+        "isProprietary": false,
+        "estimatedPct": 19.8
+      },
+      {
+        "name": "Corn starch",
+        "cas": "9005-25-8",
+        "concentrationRaw": "10.00 - 30.00",
+        "min": 10,
+        "max": 30,
+        "isProprietary": false,
+        "estimatedPct": 19.8
+      },
+      {
+        "name": "Propane",
+        "cas": "74-98-6",
+        "concentrationRaw": "5.00 - 10.00",
+        "min": 5,
+        "max": 10,
+        "isProprietary": false,
+        "estimatedPct": 7.43
+      },
+      {
+        "name": "Isobutane",
+        "cas": "75-28-5",
+        "concentrationRaw": "5.00 - 10.00",
+        "min": 5,
+        "max": 10,
+        "isProprietary": false,
+        "estimatedPct": 7.43
+      },
+      {
+        "name": "Isopropyl Myristate",
+        "cas": "110-27-0",
+        "concentrationRaw": "1.00 - 5.00",
+        "min": 1,
+        "max": 5,
+        "isProprietary": false,
+        "estimatedPct": 2.97
+      },
+      {
+        "name": "Magnesium carbonate",
+        "cas": "546-93-0",
+        "concentrationRaw": "1.00 - 5.00",
+        "min": 1,
+        "max": 5,
+        "isProprietary": false,
+        "estimatedPct": 2.97
+      }
+    ],
+    "brand": "Repel",
+    "aliases": [
+      "deet",
+      "bug spray",
+      "mosquito repellent",
+      "off"
+    ],
+    "sourceUrl": "https://images.thdstatic.com/catalog/pdfImages/f6/f673e668-e65c-4997-bf7e-8138f67f37a8.pdf"
+  }
+]
