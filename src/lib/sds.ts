@@ -55,8 +55,11 @@ function looksLikeChemicalName(name: string): boolean {
 function cleanName(raw: string): string {
   return raw
     .replace(/\b(chemical\s*name|common\s*name|ingredient|cas[-\s]*(no|number)?\.?|synonyms?|%|wt|weight|conc(?:entration)?|:)\b/gi, ' ')
-    .replace(/[•·\-–—|]+/g, ' ')
+    .replace(/[•·|#]+/g, ' ')
+    .replace(/\(\s*\)/g, ' ')          // empty parens left after stripping "(CAS #…)"
     .replace(/\s+/g, ' ')
+    .replace(/[\s([{<–—-]+$/, '')       // drop a dangling trailing bracket/dash
+    .replace(/^[\s)\]}>–—-]+/, '')      // and a dangling leading one
     .trim();
 }
 
@@ -75,9 +78,13 @@ export function parseSds(lines: string[]): Composition {
   const ingredients: Ingredient[] = [];
 
   const HEADER_RE = /^(chemical|substance|ingredient|component|cas|common)\b/i;
+  // PDF text layers sometimes split a decimal: "15 .00" / "15 . 00" -> "15.00".
+  const fixNums = (s: string) => s.replace(/(\d)\s*\.\s*(\d)/g, '$1.$2');
+  // "balance is proprietary" prose -> a single tidy entry, not the raw sentence.
+  const BALANCE_RE = /\b(remainder|balance|formulation|composed|non[\s-]?hazardous|other\s+ingredient)/i;
 
   for (let i = 0; i < section.length; i++) {
-    const line = section[i];
+    const line = fixNums(section[i]);
     const cas = line.match(CAS_RE);
 
     if (!cas) {
@@ -88,10 +95,14 @@ export function parseSds(lines: string[]): Composition {
         !SECTION3_START.test(line) &&
         !HEADER_RE.test(line)
       ) {
-        const name = cleanName(line.replace(/proprietary|trade\s*secret|confidential|withheld|not\s*disclosed/gi, ''));
+        let name = cleanName(line.replace(/proprietary|trade\s*secret|confidential|withheld|not\s*disclosed/gi, ''));
         if (!looksLikeChemicalName(name)) continue;
+        // Collapse "the remainder of the formulation is …" sentences.
+        if (BALANCE_RE.test(line) || name.split(/\s+/).length > 5) {
+          name = 'Other / proprietary ingredients';
+        }
         ingredients.push({
-          name: name || 'Proprietary ingredient',
+          name,
           cas: '',
           concentrationRaw: 'Proprietary',
           min: null,
