@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "dataset": "tsx scripts/build-dataset.ts",
     "test:parse": "tsx scripts/test-parse.ts",
     "test:pdf": "tsx scripts/test-pdf-e2e.ts",
     "sample": "tsx scripts/make-sample.ts",
