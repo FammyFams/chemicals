@@ -12,6 +12,7 @@ import ResultsContainer from '../components/ResultsContainer.astro';
 <script>
   import { extractLines } from '../lib/pdf';
   import { parseSds } from '../lib/sds';
+  import { resolveToPdf } from '../lib/source';
   import type { Ingredient } from '../lib/types';
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -147,20 +148,24 @@ import ResultsContainer from '../components/ResultsContainer.astro';
     analyze(await file.arrayBuffer(), file.name);
   }
 
-  // URL fetch (subject to CORS in this backend-free phase)
-  loadUrlBtn.addEventListener('click', async () => {
+  // URL fetch: direct PDF link or a product page we dig the SDS link out of.
+  // Cross-origin requests route through a public CORS proxy (see lib/source).
+  async function loadFromUrl() {
     const url = urlInput.value.trim();
-    if (!url) { setStatus('Paste an SDS PDF link first.', 'err'); return; }
+    if (!url) { setStatus('Paste a Home Depot product link or an SDS PDF link first.', 'err'); return; }
+    loadUrlBtn.disabled = true;
     try {
-      setStatus('Fetching PDF…');
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      analyze(await res.arrayBuffer(), 'linked PDF');
-    } catch {
-      setStatus(
-        "Couldn't fetch that link from the browser (likely CORS). Download the PDF and upload it instead — automatic fetching arrives in Phase 2.",
-        'err',
-      );
+      setStatus('Resolving link…');
+      const { bytes, sourceUrl, fromPage } = await resolveToPdf(url);
+      if (fromPage) setStatus(`Found SDS: ${sourceUrl}`);
+      await analyze(bytes, fromPage ? 'found SDS' : 'linked PDF');
+    } catch (err) {
+      setStatus((err as Error).message || 'Could not load that link.', 'err');
+    } finally {
+      loadUrlBtn.disabled = false;
     }
-  });
+  }
+
+  loadUrlBtn.addEventListener('click', loadFromUrl);
+  urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadFromUrl(); });
 </script>
